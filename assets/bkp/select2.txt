@@ -1,0 +1,89 @@
+<!-- <select name='InnerCatBanner_action_select2[]' id="InnerCatBanner_action_select2" multiple="multiple">
+                <option value='0'><?php _e('Select a Page', 'textdomain'); ?></option>
+                <?php $terms = get_terms( 'product_cat' ); ?>
+                <?php foreach( $terms as $term ) { ?>
+                    <option value='<?php echo $term->term_id; ?>' <?php selected( $InnerPageBannerSelection, $term->term_id ); ?> ><?php echo $term->name; ?></option>
+                <?php }; ?>
+            </select>  -->
+
+
+//Ajax select taxonomy terms
+add_action( 'wp_ajax_InnerCatBanner_action_select2', InnerCatBanner_action_select2
+add_action( 'wp_ajax_nopriv_InnerCatBanner_action_select2', InnerCatBanner_action_select2
+function InnerCatBanner_action_select2(){
+
+	$return = array();
+	$taxonomy_name = $_GET['taxonomy_name'];
+
+	$terms = get_terms( $taxonomy_name, array(
+		'name__like' => $_GET['q'],
+		'hide_empty' => true  
+	) );
+	if ( count($terms) > 0 ){
+
+		foreach ( $terms as $term ) {
+
+			$return[] = array( $term->term_id, $term->name );
+
+		}
+	}
+	echo json_encode( $return );
+	die;
+}
+
+
+// Select2 start
+
+        	//select without ajax
+        	/*jQuery('#InnerCatBanner_action_select2').select2({
+	            width: '100%',
+	            placeholder : "select me" 
+	        });*/
+        	
+        	//select with ajax
+        	/*jQuery('#InnerCatBanner_action_select2').select2({
+	            ajax: {
+	              url: '<?php echo admin_url( 'admin-ajax.php');?>', //"https://api.github.com/search/repositories",
+	              dataType: 'json',
+	              delay: 250, // delay in ms while typing when to perform a AJAX search
+	              data: function (params) {  
+	                  return {
+	                    q: params.term, // search query
+	                    action: 'InnerCatBanner_action_select2', // AJAX action for admin-ajax.php
+	                    taxonomy_name: 'product_cat',
+	                  };
+	              },
+	              processResults: function( data ) {  
+	                console.log(data);
+	                var options = [];
+	                if ( data ) {
+	                  	// data is the array of arrays, and each of them contains ID and the Label of the option
+	                    jQuery.each( data, function( index, text ) { // do not forget that "index" is just auto incremented value
+	                      options.push( { id: text[0], text: text[1]  } );
+	                    });
+	                }
+	                return {
+	                  results: options
+	                };
+	            },
+	            cache: true
+	            },
+	            minimumInputLength: 3, // the minimum of symbols to input before perform a search
+	            width: '100%',
+	            placeholder : "select me" 
+	        });*/
+
+        	//show selected items 
+	        //jQuery("#InnerCatBanner_action_select2").val([175, 33]).trigger('change');
+
+	        //set val 0
+	        //jQuery("#InnerCatBanner_action_select2").select2('val', '0');
+
+	        // unselect / select
+	        //jQuery('#InnerCatBanner_action_select2').on('select2:unselect', function (e) {
+	            // Do something
+	            //var data = e.params.data;
+	            //unselectPage.push(data.id);
+	        //});
+
+        	// Select2 end
