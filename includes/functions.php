@@ -87,8 +87,8 @@ function gs_wc_bulk_edit_columns_menu_page(){
 * Ajax Column sort ajax
 */
 function gs_wc_bulk_edit_column_sort_action(){
-	update_option("dt_colums_settings", $_POST['data']);
-    $myJSON = json_encode($_POST['data']); 
+	update_option("dt_colums_settings", wc_clean( wp_unslash( $_POST['data'] ) ));
+    $myJSON = json_encode(wc_clean( wp_unslash( $_POST['data'] ) )); 
     echo $myJSON;
     die();
 }
@@ -132,11 +132,13 @@ function gs_wc_bulk_edit_column_sort_reset_action(){
 * Ajax Filter
 */
 function gs_wc_bulk_edit_filter_action(){
-	$taxonomy_arr = $_POST['taxonomy'];
-	$metadata_arr = $_POST['metadata'];
-	$posts_arr = $_POST['posts'];
+
+	$taxonomy_arr = wc_clean( wp_unslash( $_POST['taxonomy'] ) );
+	$metadata_arr =  wc_clean( wp_unslash( $_POST['metadata'] ) );
+	$posts_arr = wc_clean( wp_unslash( $_POST['posts'] ) );
+	$bs_filter_query = wc_clean( wp_unslash( $_POST ) );
 	$gs_wc_bulk_edit_filter_query_result = gs_wc_bulk_edit_filter_query_result($taxonomy_arr, $metadata_arr, $posts_arr, 0, 15);
-	update_option("bs_filter_query", $_POST);
+	update_option("bs_filter_query", $bs_filter_query);
     $myJSON = json_encode($gs_wc_bulk_edit_filter_query_result); 
     echo $myJSON;
     die();
@@ -160,8 +162,9 @@ function gs_wc_bulk_edit_taxonomy_action_select2(){
 	global $wpdb;
 
 	$return = array();
-	$taxonomy_name = $_GET['taxonomy_name'];
-	$_search_key = $_GET['q'];
+
+	$taxonomy_name = wc_clean( wp_unslash( $_GET['taxonomy_name'] ) );
+	$_search_key = wc_clean( wp_unslash( $_GET['q'] ) );
 
 	/*$terms = get_terms( $taxonomy_name, array(
 		'name__like' => $_GET['q'],
@@ -201,18 +204,18 @@ function gs_wc_bulk_edit_load_row_action(){
 	$dt_colums_settings = gs_wc_bulk_edit_dt_colums_settings();
 
 	## Read value
-	$draw = $_POST['draw']; //datatable draw
+	$draw = wc_clean( wp_unslash( $_POST['draw'] ) ); //datatable draw
 
-	$row = $_POST['start']; //offset
-	$rowperpage = $_POST['length']; // limit
+	$row = wc_clean( wp_unslash( $_POST['start'] ) ); //offset
+	$rowperpage = wc_clean( wp_unslash( $_POST['length'] ) ); // limit
 
-	$columnIndex = $_POST['order'][0]['column']; // Column index
-	$columnName = ($columnIndex == 0) ? 'post_date' : $_POST['columns'][$columnIndex]['data']; //$_POST['columns'][$columnIndex]['data']; // Column name
-	$columnSortOrder = $_POST['order'][0]['dir']; // asc or desc
+	$columnIndex = wc_clean( wp_unslash( $_POST['order'][0]['column'] ) ); // Column index
+	$columnName = ($columnIndex == 0) ? 'post_date' : wc_clean( wp_unslash( $_POST['columns'][$columnIndex]['data'] ) ); //$_POST['columns'][$columnIndex]['data']; // Column name
+	$columnSortOrder = wc_clean( wp_unslash( $_POST['order'][0]['dir'] ) ); // asc or desc
 
-	$searchValue = $_POST['search']['value']; // Search value
+	$searchValue = wc_clean( wp_unslash( $_POST['search']['value'] ) ); // Search value
 
-	$bs_bulk_edit_action_switch_variation = $_POST['bs_bulk_edit_action_switch_variation'];
+	$bs_bulk_edit_action_switch_variation = wc_clean( wp_unslash( $_POST['bs_bulk_edit_action_switch_variation'] ) );
 
 	//new
 	$bs_filter_query = get_option("bs_filter_query");
@@ -265,11 +268,12 @@ function gs_wc_bulk_edit_load_row_action(){
 
 	    "bs_filter_query" => $bs_filter_query,
 	    "product_arr_data" => $product_arr_data,
-	    "POST_DATA" => $_POST,
+	    "POST_DATA" => wc_clean( wp_unslash( $_POST ) ),
 	);
 
-	echo json_encode($response);
-	die();
+
+	wp_send_json( $response );
+	wp_die();
 }
 
 /*
@@ -277,23 +281,23 @@ function gs_wc_bulk_edit_load_row_action(){
 */
 function gs_wc_bulk_edit_save_chages_action(){
 
-	$post_idx = $_POST['post_id'];
-	$column_type = $_POST['column_type'];
-	$column_label = $_POST['column_label'];
-	$column_name = $_POST['column_name'];
-	$column_val = $_POST['column_val'];
-	$input_val = $_POST['input_val'];
-	$selectedValues = $_POST['selectedValues'];
-	$bs_bulk_edit_action_switch = $_POST['bs_bulk_edit_action_switch'];
-	$bs_bulk_edit_action_switch_variation = $_POST['bs_bulk_edit_action_switch_variation'];
-	$bs_bulk_edit_action_switch_queue = $_POST['bs_bulk_edit_action_switch_queue'];
+	$post_idx = wc_clean( wp_unslash( $_POST['post_id'] ) );
+	$column_type =  wc_clean( wp_unslash( $_POST['column_type'] ) );
+	$column_label = wc_clean( wp_unslash( $_POST['column_label'] ) );
+	$column_name = wc_clean( wp_unslash( $_POST['column_name'] ) );
+	$column_val = wc_clean( wp_unslash( $_POST['column_val'] ) );
+	$input_val = wc_clean( wp_unslash( $_POST['input_val'] ) );
+	$selectedValues = wc_clean( wp_unslash( $_POST['selectedValues'] ) );
+	$bs_bulk_edit_action_switch = wc_clean( wp_unslash( $_POST['bs_bulk_edit_action_switch'] ) );
+	$bs_bulk_edit_action_switch_variation = wc_clean( wp_unslash( $_POST['bs_bulk_edit_action_switch_variation'] ) );
+	$bs_bulk_edit_action_switch_queue = wc_clean( wp_unslash( $_POST['bs_bulk_edit_action_switch_queue'] ) );
 	
 
 	if ($bs_bulk_edit_action_switch_queue == 1) {
 
 		//queue
-		$page = $_POST['page'];
-		$limit = $_POST['limit'];
+		$page = wc_clean( wp_unslash( $_POST['page'] ) );
+		$limit = wc_clean( wp_unslash( $_POST['limit'] ) );
 		$offset = ($page - 1) * $limit;
 		$bs_filter_query = get_option("bs_filter_query");
 		if (!empty($bs_filter_query)) {
@@ -311,7 +315,7 @@ function gs_wc_bulk_edit_save_chages_action(){
 			$post_id = $value['ID'];
 			gs_wc_bulk_edit_update_values($post_id, $column_type, $column_name, $input_val, $bs_bulk_edit_action_switch_variation);
 		}
-		$myJSON = json_encode($gs_wc_bulk_edit_filter_query_result);
+		$myJSON = $gs_wc_bulk_edit_filter_query_result;
 
 
 		//
@@ -343,7 +347,8 @@ function gs_wc_bulk_edit_save_chages_action(){
 		} while (true);
 
 		//success
-		$myJSON = json_encode($records);*/
+		$myJSON = $records;
+		*/
 		//
 
 
@@ -363,11 +368,13 @@ function gs_wc_bulk_edit_save_chages_action(){
 			}
 			
 		}
-		$myJSON = json_encode($_POST); 
+	
+		$myJSON = wc_clean( wp_unslash( $_POST ) );
 	}
 
-    echo $myJSON;
-    die();
+    
+	wp_send_json( $myJSON );
+	wp_die();
 }
 
 

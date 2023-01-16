@@ -15,13 +15,13 @@ $dt_colums_settings = gs_wc_bulk_edit_dt_colums_settings();
 				<?php foreach ($dt_colums_settings as $key => $value) { ?> 
 
 					<li class="ui-sortable-handle bs-sort-column-item">
-						<?php echo $value['column_label']; ?>
-						<input type="hidden" name="data[<?php echo $key; ?>][column_type]" value="<?php echo $value['column_type']; ?>">
-						<input type="hidden" name="data[<?php echo $key; ?>][column_label]" value="<?php echo $value['column_label']; ?>">
-						<input type="hidden" name="data[<?php echo $key; ?>][column_name]" value="<?php echo $value['column_name']; ?>">
-						<input type="hidden" class="column_option" name="data[<?php echo $key; ?>][column_option]" value="<?php echo $value['column_option']; ?>">
-						<input type="hidden" name="data[<?php echo $key; ?>][column_orderable]" value="<?php echo $value['column_orderable']; ?>">
-						<input type="checkbox" class="js-switch" value="1" <?php if ($value['column_option']){ echo "checked";}?>>
+						<?php echo esc_html($value['column_label']); ?>
+						<input type="hidden" name="data[<?php echo esc_attr($key); ?>][column_type]" value="<?php echo esc_attr($value['column_type']); ?>">
+						<input type="hidden" name="data[<?php echo esc_attr($key); ?>][column_label]" value="<?php echo esc_attr($value['column_label']); ?>">
+						<input type="hidden" name="data[<?php echo esc_attr($key); ?>][column_name]" value="<?php echo esc_attr($value['column_name']); ?>">
+						<input type="hidden" class="column_option" name="data[<?php echo esc_attr($key); ?>][column_option]" value="<?php echo esc_attr($value['column_option']); ?>">
+						<input type="hidden" name="data[<?php echo esc_attr($key); ?>][column_orderable]" value="<?php echo esc_attr($value['column_orderable']); ?>">
+						<input type="checkbox" class="js-switch" value="1" <?php if ($value['column_option']){ echo esc_html("checked");}?>>
 					</li>
 				
 				<?php } ?>

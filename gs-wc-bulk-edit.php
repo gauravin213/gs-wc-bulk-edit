@@ -4,8 +4,13 @@
 Plugin Name: Gs wc bulk edit
 Description: This is the Gs wc bulk edit Product plugin
 Author: Gaurav 
+Version: 1.0.0
+License: GPL-2.0+
+License URI: http://www.gnu.org/licenses/gpl-2.0.txt
 Text Domain: gs-wc-bulk-edit 
 */
+
+
 
 //prefix: GS_WC_BULK_EDIT gs_wc_bulk_edit
 

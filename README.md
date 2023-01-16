@@ -4,7 +4,7 @@
 
 WordPress plugin for woocommerce bulk edit and managing woocommerce products
 
-**Support and Requests please in Github:** https://github.com/gauravin213/gs-wc-bulk-edit.git
+**Support and Requests please in Github:** https://github.com/gauravin213/gs-wc-bulk-edit
 
 ### REQUIREMENTS
 

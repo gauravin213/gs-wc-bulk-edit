@@ -2,7 +2,7 @@
 Contributors: gauravin213
 Tags: wp-bulk, wp-bulk-edit, light bulk editor
 Requires at least: 4.2
-Tested up to: 5.8.3
+Tested up to: 6.1.1
 Requires PHP: 5.3.0
 Stable tag: 1.0.0
 License: GPLv2 or later
@@ -13,7 +13,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 WordPress plugin for woocommerce bulk edit and managing woocommerce products
 
-**Support and Requests please in Github:** https://github.com/gauravin213/gs-wc-bulk-edit.git
+**Support and Requests please in Github:** https://github.com/gauravin213/gs-wc-bulk-edit
 
 ### REQUIREMENTS
 

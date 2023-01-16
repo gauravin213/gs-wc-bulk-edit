@@ -150,10 +150,10 @@ $dt_colums_settings = gs_wc_bulk_edit_dt_colums_settings();
 	                    if ($value['column_option']) {
 	                        if ($value['column_type'] == 'post_table_id') {
 	                            ?>
-	                            <th data-ppp="123" class="fix-col"><input type="checkbox" id="checkAll"></th>
+	                            <th class="fix-col"><input type="checkbox" id="checkAll"></th>
 	                            <?php
 	                        }else{
-	                            ?><th data-ppp="123"><?php echo $value['column_label']?></th><?php
+	                            ?><th><?php echo esc_html($value['column_label']);?></th><?php
 	                        }
 	                    } 
 	                }
