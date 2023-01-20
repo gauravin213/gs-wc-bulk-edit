@@ -17,10 +17,10 @@ function gs_wc_bulk_edit_admin_enqueue_scripts(){
       wp_enqueue_media();
   	}*/
 
-	//select2 cdn
-    wp_enqueue_style('select2', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css' );
-    wp_enqueue_script('select2', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js', array('jquery') );
-
+	//select2s
+    wp_enqueue_style('select2', GS_WC_BULK_EDIT_URL . 'assets/select2/css/select2.min.css', array(), '1.0', 'all');
+    wp_enqueue_script('select2',GS_WC_BULK_EDIT_URL . 'assets/select2/js/select2.min.js', array( 'jquery' ), '1.0', true);
+   
     //datatable
     wp_enqueue_script( 'cus-datatable-js',GS_WC_BULK_EDIT_URL . 'assets/dataTables/datatables.min.js', array( 'jquery' ), '1.0', true );
     wp_enqueue_style('cus-datatable-style', GS_WC_BULK_EDIT_URL . 'assets/dataTables/datatables.min.css', array(), '1.0', 'all' );
@@ -163,8 +163,8 @@ function gs_wc_bulk_edit_taxonomy_action_select2(){
 
 	$return = array();
 
-	$taxonomy_name = wc_clean( wp_unslash( $_GET['taxonomy_name'] ) );
-	$_search_key = wc_clean( wp_unslash( $_GET['q'] ) );
+	$taxonomy_name = sanitize_text_field( $_GET['taxonomy_name'] );
+	$_search_key = sanitize_text_field( $_GET['q'] );
 
 	/*$terms = get_terms( $taxonomy_name, array(
 		'name__like' => $_GET['q'],
@@ -389,7 +389,7 @@ function gs_wc_bulk_edit_get_filter_select_val($taxonomy_name = ''){
 			$termData = get_term($term_id, $taxonomy_name);
 			//echo $termData->name; echo "<br>";
 			?>
-			<option value="<?php echo $term_id;?>" selected><?php echo $termData->name;?></option>
+			<option value="<?php echo esc_attr($term_id);?>" selected><?php echo esc_html($termData->name);?></option>
 			<?php
 		}
 	}
