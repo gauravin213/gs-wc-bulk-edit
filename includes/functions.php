@@ -7,17 +7,12 @@ defined( 'ABSPATH' ) or die();
 */
 function gs_wc_bulk_edit_admin_enqueue_scripts(){
 
-	//wp_enqueue_script( 'thickbox' ); //thickbox
-    //wp_enqueue_style( 'thickbox' ); //thickbox
-    wp_enqueue_editor(); //js wp.tinymce
+    wp_enqueue_editor();
     wp_enqueue_script( 'common' );
   	wp_enqueue_script( 'wp-lists' );
   	wp_enqueue_script( 'postbox' );
-  	/*if ( ! did_action( 'wp_enqueue_media' ) ) {
-      wp_enqueue_media();
-  	}*/
-
-	//select2s
+  	
+	//select2 
     wp_enqueue_style('select2', GS_WC_BULK_EDIT_URL . 'assets/select2/css/select2.min.css', array(), '1.0', 'all');
     wp_enqueue_script('select2',GS_WC_BULK_EDIT_URL . 'assets/select2/js/select2.min.js', array( 'jquery' ), '1.0', true);
    
@@ -40,12 +35,8 @@ function gs_wc_bulk_edit_admin_enqueue_scripts(){
     wp_enqueue_style('cus-jquery-scrollbar-style', GS_WC_BULK_EDIT_URL . 'assets/jquery-scrollbar/jquery.scrollbar.css', array(), '1.0', 'all' );
     wp_enqueue_style( 'cus-jquery-scrollbar-custom2-style',GS_WC_BULK_EDIT_URL . 'assets/jquery-scrollbar/jquery.scrollbar.custom2.css', array(), '1.0', 'all' );
     
-    //
-	//type = colums, columnDefs, meta_keys
-	//formate = php/json
 	$dt_colums = gs_wc_bulk_edit_get_columns_settings('colums', 'json');
 	$columnDefs = gs_wc_bulk_edit_get_columns_settings('columnDefs', 'json');
-
     wp_register_script( 'cus_bs_bulk_edit_js',GS_WC_BULK_EDIT_URL . 'assets/js/bs-bulk-edit.js', array( 'jquery' ), '1.0', true );
     $data = array(
         'ajaxurl'=> admin_url( 'admin-ajax.php'),
@@ -56,7 +47,7 @@ function gs_wc_bulk_edit_admin_enqueue_scripts(){
     wp_localize_script( 'cus_bs_bulk_edit_js', 'datab', $data );
     wp_enqueue_script( 'cus_bs_bulk_edit_js');
     wp_enqueue_style('cus_bs_bulk_edit_style', GS_WC_BULK_EDIT_URL . 'assets/css/bs-bulk-edit.css', array(), '1.0', 'all' );
-    //
+ 
 }
 
 /*
@@ -87,8 +78,8 @@ function gs_wc_bulk_edit_columns_menu_page(){
 * Ajax Column sort ajax
 */
 function gs_wc_bulk_edit_column_sort_action(){
-	update_option("dt_colums_settings", wc_clean( wp_unslash( $_POST['data'] ) ));
-    $myJSON = json_encode(wc_clean( wp_unslash( $_POST['data'] ) )); 
+	update_option("dt_colums_settings", sanitize_text_field( $_POST['data']  ));
+    $myJSON = json_encode(sanitize_text_field( $_POST['data']  )); 
     echo $myJSON;
     die();
 }
@@ -133,10 +124,10 @@ function gs_wc_bulk_edit_column_sort_reset_action(){
 */
 function gs_wc_bulk_edit_filter_action(){
 
-	$taxonomy_arr = wc_clean( wp_unslash( $_POST['taxonomy'] ) );
-	$metadata_arr =  wc_clean( wp_unslash( $_POST['metadata'] ) );
-	$posts_arr = wc_clean( wp_unslash( $_POST['posts'] ) );
-	$bs_filter_query = wc_clean( wp_unslash( $_POST ) );
+	$taxonomy_arr = sanitize_text_field( $_POST['taxonomy']  );
+	$metadata_arr =  sanitize_text_field( $_POST['metadata'] );
+	$posts_arr = sanitize_text_field( $_POST['posts'] );
+	$bs_filter_query = sanitize_text_field( $_POST );
 	$gs_wc_bulk_edit_filter_query_result = gs_wc_bulk_edit_filter_query_result($taxonomy_arr, $metadata_arr, $posts_arr, 0, 15);
 	update_option("bs_filter_query", $bs_filter_query);
     $myJSON = json_encode($gs_wc_bulk_edit_filter_query_result); 
@@ -158,20 +149,10 @@ function gs_wc_bulk_edit_clear_filter_action(){
 * Ajax select taxonomy terms
 */
 function gs_wc_bulk_edit_taxonomy_action_select2(){
-
 	global $wpdb;
-
 	$return = array();
-
 	$taxonomy_name = sanitize_text_field( $_GET['taxonomy_name'] );
 	$_search_key = sanitize_text_field( $_GET['q'] );
-
-	/*$terms = get_terms( $taxonomy_name, array(
-		'name__like' => $_GET['q'],
-		'hide_empty' => true  
-	));*/
-
-	//
 	$q_term = "
 	SELECT t1.term_id, t1.name, t1.slug FROM wp_terms as t1 
 		LEFT JOIN wp_term_taxonomy as t2 ON t1.term_id = t2.term_id 
@@ -180,14 +161,9 @@ function gs_wc_bulk_edit_taxonomy_action_select2(){
 		LIMIT 0, 10
 	";
 	$terms = $wpdb->get_results($q_term);
-	//
-
 	if ( count($terms) > 0 ){
-
 		foreach ( $terms as $term ) {
-
 			$return[] = array( $term->term_id, $term->name );
-
 		}
 	}
 	echo json_encode( $return );
@@ -204,18 +180,22 @@ function gs_wc_bulk_edit_load_row_action(){
 	$dt_colums_settings = gs_wc_bulk_edit_dt_colums_settings();
 
 	## Read value
-	$draw = wc_clean( wp_unslash( $_POST['draw'] ) ); //datatable draw
+	$draw = sanitize_text_field( $_POST['draw'] ); //datatable draw
+	$draw = (is_numeric($draw)) ? $draw : (int) $draw;
 
-	$row = wc_clean( wp_unslash( $_POST['start'] ) ); //offset
-	$rowperpage = wc_clean( wp_unslash( $_POST['length'] ) ); // limit
+	$row = sanitize_text_field( $_POST['start'] ); //offset
+	$row = (is_numeric($row)) ? $row : (int) $row;
+	$rowperpage = sanitize_text_field( $_POST['length'] ); // limit
+	$rowperpage = (is_numeric($rowperpage)) ? $rowperpage : (int) $rowperpage;
 
-	$columnIndex = wc_clean( wp_unslash( $_POST['order'][0]['column'] ) ); // Column index
-	$columnName = ($columnIndex == 0) ? 'post_date' : wc_clean( wp_unslash( $_POST['columns'][$columnIndex]['data'] ) ); //$_POST['columns'][$columnIndex]['data']; // Column name
-	$columnSortOrder = wc_clean( wp_unslash( $_POST['order'][0]['dir'] ) ); // asc or desc
+	$columnIndex = sanitize_text_field( $_POST['order'][0]['column'] ); // Column index
+	$columnIndex = (is_numeric($columnIndex)) ? $columnIndex : (int) $columnIndex;
+	$columnName = ($columnIndex == 0) ? 'post_date' : sanitize_text_field( $_POST['columns'][$columnIndex]['data'] ); //$_POST['columns'][$columnIndex]['data']; // Column name
+	$columnSortOrder = sanitize_text_field( $_POST['order'][0]['dir'] ); // asc or desc
 
-	$searchValue = wc_clean( wp_unslash( $_POST['search']['value'] ) ); // Search value
+	$searchValue = sanitize_text_field( $_POST['search']['value'] ); // Search value
 
-	$bs_bulk_edit_action_switch_variation = wc_clean( wp_unslash( $_POST['bs_bulk_edit_action_switch_variation'] ) );
+	$bs_bulk_edit_action_switch_variation = sanitize_text_field( $_POST['bs_bulk_edit_action_switch_variation'] );
 
 	//new
 	$bs_filter_query = get_option("bs_filter_query");
@@ -268,7 +248,7 @@ function gs_wc_bulk_edit_load_row_action(){
 
 	    "bs_filter_query" => $bs_filter_query,
 	    "product_arr_data" => $product_arr_data,
-	    "POST_DATA" => wc_clean( wp_unslash( $_POST ) ),
+	    "POST_DATA" => sanitize_text_field( $_POST ),
 	);
 
 
@@ -281,23 +261,26 @@ function gs_wc_bulk_edit_load_row_action(){
 */
 function gs_wc_bulk_edit_save_chages_action(){
 
-	$post_idx = wc_clean( wp_unslash( $_POST['post_id'] ) );
-	$column_type =  wc_clean( wp_unslash( $_POST['column_type'] ) );
-	$column_label = wc_clean( wp_unslash( $_POST['column_label'] ) );
-	$column_name = wc_clean( wp_unslash( $_POST['column_name'] ) );
-	$column_val = wc_clean( wp_unslash( $_POST['column_val'] ) );
-	$input_val = wc_clean( wp_unslash( $_POST['input_val'] ) );
-	$selectedValues = wc_clean( wp_unslash( $_POST['selectedValues'] ) );
-	$bs_bulk_edit_action_switch = wc_clean( wp_unslash( $_POST['bs_bulk_edit_action_switch'] ) );
-	$bs_bulk_edit_action_switch_variation = wc_clean( wp_unslash( $_POST['bs_bulk_edit_action_switch_variation'] ) );
-	$bs_bulk_edit_action_switch_queue = wc_clean( wp_unslash( $_POST['bs_bulk_edit_action_switch_queue'] ) );
+	$post_idx = sanitize_text_field( $_POST['post_id'] );
+	$post_idx = (is_numeric($post_idx)) ? $post_idx : (int) $post_idx;
+	$column_type =  sanitize_text_field( $_POST['column_type'] );
+	$column_label = sanitize_text_field( $_POST['column_label'] );
+	$column_name = sanitize_text_field( $_POST['column_name'] );
+	$column_val = sanitize_text_field( $_POST['column_val'] );
+	$input_val = sanitize_text_field( $_POST['input_val'] );
+	$selectedValues = sanitize_text_field( $_POST['selectedValues'] );
+	$bs_bulk_edit_action_switch = sanitize_text_field( $_POST['bs_bulk_edit_action_switch'] );
+	$bs_bulk_edit_action_switch_variation = sanitize_text_field( $_POST['bs_bulk_edit_action_switch_variation'] );
+	$bs_bulk_edit_action_switch_queue = sanitize_text_field( $_POST['bs_bulk_edit_action_switch_queue'] );
 	
 
 	if ($bs_bulk_edit_action_switch_queue == 1) {
 
 		//queue
-		$page = wc_clean( wp_unslash( $_POST['page'] ) );
-		$limit = wc_clean( wp_unslash( $_POST['limit'] ) );
+		$page = sanitize_text_field( $_POST['page'] );
+		$page = (is_numeric($page)) ? $page : (int) $page;
+		$limit = sanitize_text_field( $_POST['limit'] );
+		$limit = (is_numeric($limit)) ? $limit : (int) $limit;
 		$offset = ($page - 1) * $limit;
 		$bs_filter_query = get_option("bs_filter_query");
 		if (!empty($bs_filter_query)) {
@@ -369,10 +352,9 @@ function gs_wc_bulk_edit_save_chages_action(){
 			
 		}
 	
-		$myJSON = wc_clean( wp_unslash( $_POST ) );
+		$myJSON = sanitize_text_field( $_POST );
 	}
 
-    
 	wp_send_json( $myJSON );
 	wp_die();
 }
@@ -383,11 +365,9 @@ function gs_wc_bulk_edit_save_chages_action(){
 */
 function gs_wc_bulk_edit_get_filter_select_val($taxonomy_name = ''){
 	$bs_filter_query = get_option("bs_filter_query");
-	//echo "<pre>bs_filter_query: "; print_r($bs_filter_query); echo "</pre>";
 	if (!empty($bs_filter_query['taxonomy']) && !empty($taxonomy_name)) {
 		foreach ($bs_filter_query['taxonomy'][$taxonomy_name] as $term_id) {
 			$termData = get_term($term_id, $taxonomy_name);
-			//echo $termData->name; echo "<br>";
 			?>
 			<option value="<?php echo esc_attr($term_id);?>" selected><?php echo esc_html($termData->name);?></option>
 			<?php
@@ -400,7 +380,6 @@ function gs_wc_bulk_edit_get_filter_select_val($taxonomy_name = ''){
 */
 function gs_wc_bulk_edit_get_filter_text_val($type = '', $name = ''){
 	$bs_filter_query = get_option("bs_filter_query");
-	//echo "<pre>bs_filter_query: "; print_r($bs_filter_query); echo "</pre>";
 	return $bs_filter_query[$type][$name];
 }
 
@@ -408,11 +387,6 @@ function gs_wc_bulk_edit_get_filter_text_val($type = '', $name = ''){
 * Update values
 */
 function gs_wc_bulk_edit_update_values($post_id, $column_type, $column_name, $input_val, $switch_variation){
-
-
-	/*echo "post_id: ".$post_id; echo "<br>";
-	echo "column_name: ".$column_name; echo "<br>";
-	echo "input_val: ".$input_val; echo "<br>";*/
 
 	//post_table_attribute
 	if ($column_type == "post_table_attribute") {
@@ -604,194 +578,103 @@ function gs_wc_bulk_edit_update_values($post_id, $column_type, $column_name, $in
 * Display output
 */
 function gs_wc_bulk_edit_get_display_output($cc, $row, $product_type = ""){
-
 	global $wpdb;
-
 	$data = [];
-	//$product_arr_data = [];
-
 	$dt_colums_settings = gs_wc_bulk_edit_dt_colums_settings();
-
 	foreach ($dt_colums_settings as $key => $value) {
-
         if ($value['column_option']) {
+        	$data[$cc][$value['column_name']] = $row[$value['column_name']];
+            if ($value['column_type'] == 'post_table_id' AND $value['column_name'] == 'id_checkbox') { 
+                //post_table_id
+                $data[$cc][$value['column_name']] = '<div><input type="checkbox" name="post_id[]" class="checkItem" value="'.$row['ID'].'"></div>';
+                $row[$value['column_name']] = $row[$value['column_name']];
+            }else if($value['column_type'] == 'post_thumbnail'){ 
+                //post_table_attribute
+                $metaDataValue = get_post_meta($row['ID'], $value['column_name'], true);
+                if (!empty($metaDataValue)) {
+                	$image_size = 'medium'; // (thumbnail, medium, large, full or custom size)
+                	$img_url_arr = wp_get_attachment_image_src( $metaDataValue, $image_size );
+                	$img_url = $img_url_arr[0];
+                	$data[$cc][$value['column_name']] = '<div data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="'.$row[$value['column_name']].'"><img src="'.$img_url.'" width="50"></div>';
+                	$row[$value['column_name']] = $img_url;
+                }else{
+                	$data[$cc][$value['column_name']] = '<div data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">N/A</div>';
+                	$row[$value['column_name']] = "";
+                }
+            }else if($value['column_type'] == 'post_table_attribute'){ 
+                //post_table_attribute
+                if (!empty($row[$value['column_name']])) { 
+                	if ($value['column_name'] == 'post_content' || $value['column_name'] == 'post_excerpt') {
+                		$content = 'Open Editor';
+                		$data[$cc][$value['column_name']] = '<div class="be_td_cell bs-open-editor" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">'.$content.'</div><div class="be-model"></div>';
+                	}else if($value['column_name'] == 'ID'){
+                		$data[$cc][$value['column_name']] = '<div class="be_td_cell_ID" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="'.$row[$value['column_name']].'"><a href="'.get_permalink($row['ID']).'" target="_blank" style="text-decoration: none;">'.$row[$value['column_name']].'</a></div><div class="be-model"></div>';
 
-        	foreach ($dt_colums_settings as $key => $value) {
-
-		        if ($value['column_option']) {
-
-		        	 $data[$cc][$value['column_name']] = $row[$value['column_name']];
-		            
-		            if ($value['column_type'] == 'post_table_id' AND $value['column_name'] == 'id_checkbox') { 
-
-		                //post_table_id
-		                $data[$cc][$value['column_name']] = '<div><input type="checkbox" name="post_id[]" class="checkItem" value="'.$row['ID'].'"></div>';
-
-		                $row[$value['column_name']] = $row[$value['column_name']];
-		            	//$product_arr_data[$row['ID']] = $row;
-		                
-		            }else if($value['column_type'] == 'post_thumbnail'){ 
-
-		                //post_table_attribute
-		                $metaDataValue = get_post_meta($row['ID'], $value['column_name'], true);
-		                if (!empty($metaDataValue)) {
-
-		                	$image_size = 'medium'; // (thumbnail, medium, large, full or custom size)
-	                    	$img_url_arr = wp_get_attachment_image_src( $metaDataValue, $image_size );
-	                    	$img_url = $img_url_arr[0];
-
-		                	$data[$cc][$value['column_name']] = '<div data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="'.$row[$value['column_name']].'"><img src="'.$img_url.'" width="50"></div>';
-
-
-		                	$row[$value['column_name']] = $img_url;
-		            		//$product_arr_data[$row['ID']] = $row;
-
-		                }else{
-		                	$data[$cc][$value['column_name']] = '<div data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">N/A</div>';
-
-		                	$row[$value['column_name']] = "";
-		            		//$product_arr_data[$row['ID']] = $row;
-		                }
-
-		            }else if($value['column_type'] == 'post_table_attribute'){ 
-
-		                //post_table_attribute
-		                if (!empty($row[$value['column_name']])) { 
-
-		                	if ($value['column_name'] == 'post_content' || $value['column_name'] == 'post_excerpt') {
-
-		                		$content = 'Open Editor';
-
-		                		$data[$cc][$value['column_name']] = '<div class="be_td_cell bs-open-editor" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">'.$content.'</div><div class="be-model"></div>';
-
-		                	}else if($value['column_name'] == 'ID'){
-
-		                		$data[$cc][$value['column_name']] = '<div class="be_td_cell_ID" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="'.$row[$value['column_name']].'"><a href="'.get_permalink($row['ID']).'" target="_blank" style="text-decoration: none;">'.$row[$value['column_name']].'</a></div><div class="be-model"></div>';
-
-		                	}else{
-		                		$data[$cc][$value['column_name']] = '<div class="be_td_cell" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="'.$row[$value['column_name']].'">'.$row[$value['column_name']].'</div><div class="be-model"></div>';
-		                	}
-
-		                	$row[$value['column_name']] = $row[$value['column_name']];
-		            		//$product_arr_data[$row['ID']] = $row;
-
-		                }else{
-		                	$data[$cc][$value['column_name']] = '<div class="be_td_cell" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">N/A</div><div class="be-model">';
-
-		                	$row[$value['column_name']] = "";
-		            		//$product_arr_data[$row['ID']] = $row;
-		                }
-
-		            }else if($value['column_type'] == 'meta_key'){ 
-
-		            	if ( ($product_type == 'variable' || $product_type == 'grouped') && in_array($value['column_name'], ['_price', '_regular_price', '_sale_price'])) { //not editable
-
-							$data[$cc][$value['column_name']] = '<div class="be_td_cell_not_editable" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">Not Editable</div><div class="be-model">';
-
-							$row[$value['column_name']] = '';
-							//$product_arr_data[$row['ID']] = $row;
-		            		
-		            	}else{
-		            		//meta_key
-			                $metaDataValue = get_post_meta($row['ID'], $value['column_name'], true);
-			                if (!empty($metaDataValue)) {
-			                	$data[$cc][$value['column_name']] = '<div class="be_td_cell" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="'.$metaDataValue.'">'.$metaDataValue.'</div><div class="be-model">';
-
-			                	$row[$value['column_name']] = $metaDataValue;
-			            		//$product_arr_data[$row['ID']] = $row;
-
-			                }else{
-			                	$data[$cc][$value['column_name']] = '<div class="be_td_cell" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">N/A</div><div class="be-model">';
-
-			                	$row[$value['column_name']] = '';
-			            		//$product_arr_data[$row['ID']] = $row;
-			                }
-		            	}
-
-
-		            }else if($value['column_type'] == 'taxonomy'){ 
-
-
-		            	if ($row['post_type'] == 'product_variation') { //not editable
-
-		            		$data[$cc][$value['column_name']] = '<div class="be_td_cell_not_editable" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">Not Editable</div><div class="be-model">';
-			             
-			                $row[$value['column_name']] = [];
-			            	//$product_arr_data[$row['ID']] = $row;
-		            		
-		            	}else{
-
-		            		 //taxonomy
-		            		//$terms = get_the_terms($row['ID'] , $value['column_name']);
-			                /*$q_term = "SELECT term_id, name, slug FROM wp_terms WHERE term_id IN(
-										SELECT term_id FROM wp_term_taxonomy WHERE term_taxonomy_id IN(
-											SELECT term_taxonomy_id FROM wp_term_relationships WHERE object_id IN({$row['ID']})
-										)
-										AND taxonomy = '{$value['column_name']}'
-									)";
-							$terms = $wpdb->get_results($q_term, ARRAY_A);*/
-							$terms = gs_wc_bulk_edit_get_the_terms($row['ID'], $value['column_name'], true, ['term_id', 'name', 'slug']);
-			                if (!empty($terms)) {
-			                	$term_names = array_column($terms, 'name');
-			                	$term_names = implode(', ', $term_names);
-			                	$terms_json_data = json_encode($terms );
-
-			                	if ($value['column_name'] == 'product_type') { //not editable
-
-			                		$data[$cc][$value['column_name']] = '<div class="be_td_cell_not_editable_only_display" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">'.$term_names.'</div><div class="be-model">';
-			                		
-			                	}else{ 
-
-			                		//editable
-
-			                		$data[$cc][$value['column_name']] = '<div class="be_td_cell" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">'.$term_names.'</div><div class="be-model">';
-			                		
-			                	}
-
-			                	
-			                	$row[$value['column_name']] = $terms;
-			            		//$product_arr_data[$row['ID']] = $row;
-			                	
-
-			                }else{
-			                	$data[$cc][$value['column_name']] = '<div class="be_td_cell" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">N/A</div><div class="be-model">';
-			             
-			                	$row[$value['column_name']] = [];
-			            		//$product_arr_data[$row['ID']] = $row;
-			                }
-
-		            	}
-		            	
-		            }else{ 
-
-		                //
-		            }
-		        } 
-		    }
-        	
-            
+                	}else{
+                		$data[$cc][$value['column_name']] = '<div class="be_td_cell" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="'.$row[$value['column_name']].'">'.$row[$value['column_name']].'</div><div class="be-model"></div>';
+                	}
+                	$row[$value['column_name']] = $row[$value['column_name']];
+                }else{
+                	$data[$cc][$value['column_name']] = '<div class="be_td_cell" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">N/A</div><div class="be-model">';
+                	$row[$value['column_name']] = "";
+                }
+            }else if($value['column_type'] == 'meta_key'){ 
+            	if ( ($product_type == 'variable' || $product_type == 'grouped') && in_array($value['column_name'], ['_price', '_regular_price', '_sale_price'])) { //not editable
+					$data[$cc][$value['column_name']] = '<div class="be_td_cell_not_editable" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">Not Editable</div><div class="be-model">';
+					$row[$value['column_name']] = '';
+            	}else{
+            		//meta_key
+	                $metaDataValue = get_post_meta($row['ID'], $value['column_name'], true);
+	                if (!empty($metaDataValue)) {
+	                	$data[$cc][$value['column_name']] = '<div class="be_td_cell" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="'.$metaDataValue.'">'.$metaDataValue.'</div><div class="be-model">';
+	                	$row[$value['column_name']] = $metaDataValue;
+	                }else{
+	                	$data[$cc][$value['column_name']] = '<div class="be_td_cell" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">N/A</div><div class="be-model">';
+	                	$row[$value['column_name']] = '';
+	                }
+            	}
+            }else if($value['column_type'] == 'taxonomy'){ 
+            	if ($row['post_type'] == 'product_variation') { //not editable
+            		$data[$cc][$value['column_name']] = '<div class="be_td_cell_not_editable" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">Not Editable</div><div class="be-model">';
+	                $row[$value['column_name']] = [];
+            	}else{
+					$terms = gs_wc_bulk_edit_get_the_terms($row['ID'], $value['column_name'], true, ['term_id', 'name', 'slug']);
+	                if (!empty($terms)) {
+	                	$term_names = array_column($terms, 'name');
+	                	$term_names = implode(', ', $term_names);
+	                	$terms_json_data = json_encode($terms );
+	                	if ($value['column_name'] == 'product_type') { //not editable
+	                		$data[$cc][$value['column_name']] = '<div class="be_td_cell_not_editable_only_display" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">'.$term_names.'</div><div class="be-model">';
+	                	}else{ 
+	                		//editable
+	                		$data[$cc][$value['column_name']] = '<div class="be_td_cell" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">'.$term_names.'</div><div class="be-model">';
+	                	}
+	                	$row[$value['column_name']] = $terms;
+	                }else{
+	                	$data[$cc][$value['column_name']] = '<div class="be_td_cell" data-post_id="'.$row['ID'].'" data-column_type="'.$value['column_type'].'" data-column_label="'.$value['column_label'].'" data-column_name="'.$value['column_name'].'" data-column_val="">N/A</div><div class="be-model">';
+	                	$row[$value['column_name']] = [];
+	                }
+            	}
+            }else{ 
+                //
+            }
         } 
-	}
-
+    }
 	return [
 		'data' => $data,
 		'row' => $row
 	];
-
 }
 
 /*
 * Get the terms
 */
 function gs_wc_bulk_edit_get_the_terms($post_id, $taxonomy, $output_type = false, $columns = []){
-
 	global $wpdb;
-
 	$select_names = '*';
 	if (!empty($columns)) {
 		$select_names = implode(', ', $columns);
 	}
-
 	$q_term = "
 			SELECT {$select_names} FROM wp_terms WHERE term_id IN(
 				SELECT term_id FROM wp_term_taxonomy WHERE term_taxonomy_id IN(
@@ -804,9 +687,7 @@ function gs_wc_bulk_edit_get_the_terms($post_id, $taxonomy, $output_type = false
 	}else{
 		$terms = $wpdb->get_results($q_term);
 	}
-	
 	return $terms;
-
 }
 
 /*
@@ -863,7 +744,6 @@ function gs_wc_bulk_edit_filter_query_result($taxonomy_arr = array(), $metadata_
 		}
 	}
 
-	
 	if (!empty($posts_arr)) {
 		foreach ($posts_arr as $post_key => $post_value) {
 			if (!empty($post_value)) {
@@ -881,10 +761,6 @@ function gs_wc_bulk_edit_filter_query_result($taxonomy_arr = array(), $metadata_
 		$q_orderby .= " ORDER BY p.{$orderby} {$order}  ";
 	}
 
-	/*if (!empty($q_post_where)) {
-		$where_q .= " AND({$q_post_where})";
-	}*/
-
 	if (!empty($q_taxonomy_where)) {
 		$where_q .= " AND({$q_taxonomy_where})";
 	}
@@ -893,7 +769,6 @@ function gs_wc_bulk_edit_filter_query_result($taxonomy_arr = array(), $metadata_
 		$where_q .= " AND({$q_metadata_where})";
 	}
 
-	// AND p.post_type IN('product', 'product_variation'), AND p.post_type = 'product'
 	$result_q = "
 		SELECT * FROM wp_posts as p
 			{$q_taxonomy_join} 
@@ -940,9 +815,6 @@ function gs_wc_bulk_edit_filter_query_result($taxonomy_arr = array(), $metadata_
 	];
 	
 }
-
-
-
 
 /*
 * Register activation hook
@@ -1227,8 +1099,6 @@ function gs_wc_bulk_edit_get_columns_settings($entity_type = '', $formate = 'php
 		'columnDefs' => $columnDefs,
 		'meta_keys' => $meta_keys
 	];
-
-	//return json_encode($data[$entity_type], JSON_PRETTY_PRINT);
 
 	if ($entity_type == '') {
 		return ($formate == 'php') ? $data : json_encode($data);

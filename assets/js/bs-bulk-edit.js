@@ -987,8 +987,10 @@ jQuery(document).ready(function(){
 	jQuery("#gs_wc_bulk_edit_filter_section_toggle_body").hide();
 	if (gs_wc_bulk_edit_filter_show_hide_state == 1) {
 		jQuery("#gs_wc_bulk_edit_filter_section_toggle_body").show();
+		jQuery("#gs_wc_bulk_edit_filter_section_toggle_event").text('Filter Hide');
 	}else{
 		jQuery("#gs_wc_bulk_edit_filter_section_toggle_body").hide();
+		jQuery("#gs_wc_bulk_edit_filter_section_toggle_event").text('Filter Show');
 	}
 	jQuery(document).on('click', '#gs_wc_bulk_edit_filter_section_toggle_event', function(e){
 		e.preventDefault();
