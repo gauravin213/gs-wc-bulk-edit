@@ -78,8 +78,8 @@ function gs_wc_bulk_edit_columns_menu_page(){
 * Ajax Column sort ajax
 */
 function gs_wc_bulk_edit_column_sort_action(){
-	update_option("dt_colums_settings", sanitize_text_field( $_POST['data']  ));
-    $myJSON = json_encode(sanitize_text_field( $_POST['data']  )); 
+	update_option("dt_colums_settings", wc_clean( wp_unslash( $_POST['data'])));
+    $myJSON = json_encode(wc_clean( wp_unslash( $_POST['data']))); 
     echo $myJSON;
     die();
 }
@@ -124,10 +124,10 @@ function gs_wc_bulk_edit_column_sort_reset_action(){
 */
 function gs_wc_bulk_edit_filter_action(){
 
-	$taxonomy_arr = sanitize_text_field( $_POST['taxonomy']  );
-	$metadata_arr =  sanitize_text_field( $_POST['metadata'] );
-	$posts_arr = sanitize_text_field( $_POST['posts'] );
-	$bs_filter_query = sanitize_text_field( $_POST );
+	$taxonomy_arr = wc_clean( wp_unslash( $_POST['taxonomy'])  );
+	$metadata_arr =  wc_clean( wp_unslash( $_POST['metadata']) );
+	$posts_arr = wc_clean( wp_unslash( $_POST['posts']) );
+	$bs_filter_query = wc_clean( wp_unslash( $_POST ));
 	$gs_wc_bulk_edit_filter_query_result = gs_wc_bulk_edit_filter_query_result($taxonomy_arr, $metadata_arr, $posts_arr, 0, 15);
 	update_option("bs_filter_query", $bs_filter_query);
     $myJSON = json_encode($gs_wc_bulk_edit_filter_query_result); 
@@ -248,7 +248,7 @@ function gs_wc_bulk_edit_load_row_action(){
 
 	    "bs_filter_query" => $bs_filter_query,
 	    "product_arr_data" => $product_arr_data,
-	    "POST_DATA" => sanitize_text_field( $_POST ),
+	    "POST_DATA" => wc_clean( wp_unslash( $_POST )),
 	);
 
 
@@ -268,12 +268,11 @@ function gs_wc_bulk_edit_save_chages_action(){
 	$column_name = sanitize_text_field( $_POST['column_name'] );
 	$column_val = sanitize_text_field( $_POST['column_val'] );
 	$input_val = sanitize_text_field( $_POST['input_val'] );
-	$selectedValues = sanitize_text_field( $_POST['selectedValues'] );
+	$selectedValues = wc_clean( wp_unslash( $_POST['selectedValues'] ) );
 	$bs_bulk_edit_action_switch = sanitize_text_field( $_POST['bs_bulk_edit_action_switch'] );
 	$bs_bulk_edit_action_switch_variation = sanitize_text_field( $_POST['bs_bulk_edit_action_switch_variation'] );
 	$bs_bulk_edit_action_switch_queue = sanitize_text_field( $_POST['bs_bulk_edit_action_switch_queue'] );
 	
-
 	if ($bs_bulk_edit_action_switch_queue == 1) {
 
 		//queue
