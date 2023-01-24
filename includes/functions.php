@@ -180,16 +180,12 @@ function gs_wc_bulk_edit_load_row_action(){
 	$dt_colums_settings = gs_wc_bulk_edit_dt_colums_settings();
 
 	## Read value
-	$draw = sanitize_text_field( $_POST['draw'] ); //datatable draw
-	$draw = (is_numeric($draw)) ? $draw : (int) $draw;
+	$draw =  (int) $_POST['draw']; //datatable draw
 
-	$row = sanitize_text_field( $_POST['start'] ); //offset
-	$row = (is_numeric($row)) ? $row : (int) $row;
-	$rowperpage = sanitize_text_field( $_POST['length'] ); // limit
-	$rowperpage = (is_numeric($rowperpage)) ? $rowperpage : (int) $rowperpage;
+	$row = (int) $_POST['start']; //offset
+	$rowperpage = (int) $_POST['length']; // limit
 
-	$columnIndex = sanitize_text_field( $_POST['order'][0]['column'] ); // Column index
-	$columnIndex = (is_numeric($columnIndex)) ? $columnIndex : (int) $columnIndex;
+	$columnIndex = (int) $_POST['order'][0]['column']; // Column index
 	$columnName = ($columnIndex == 0) ? 'post_date' : sanitize_text_field( $_POST['columns'][$columnIndex]['data'] ); //$_POST['columns'][$columnIndex]['data']; // Column name
 	$columnSortOrder = sanitize_text_field( $_POST['order'][0]['dir'] ); // asc or desc
 
@@ -261,8 +257,7 @@ function gs_wc_bulk_edit_load_row_action(){
 */
 function gs_wc_bulk_edit_save_chages_action(){
 
-	$post_idx = sanitize_text_field( $_POST['post_id'] );
-	$post_idx = (is_numeric($post_idx)) ? $post_idx : (int) $post_idx;
+	$post_idx = (int) $_POST['post_id'];
 	$column_type =  sanitize_text_field( $_POST['column_type'] );
 	$column_label = sanitize_text_field( $_POST['column_label'] );
 	$column_name = sanitize_text_field( $_POST['column_name'] );
@@ -276,10 +271,8 @@ function gs_wc_bulk_edit_save_chages_action(){
 	if ($bs_bulk_edit_action_switch_queue == 1) {
 
 		//queue
-		$page = sanitize_text_field( $_POST['page'] );
-		$page = (is_numeric($page)) ? $page : (int) $page;
-		$limit = sanitize_text_field( $_POST['limit'] );
-		$limit = (is_numeric($limit)) ? $limit : (int) $limit;
+		$page = (int) $_POST['page'];
+		$limit = (int) $_POST['limit'];
 		$offset = ($page - 1) * $limit;
 		$bs_filter_query = get_option("bs_filter_query");
 		if (!empty($bs_filter_query)) {
