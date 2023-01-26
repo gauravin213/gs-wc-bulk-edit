@@ -1,4 +1,4 @@
-### GS WC BULK EDIT PRODUCT
+### GS Bulk Product Editor for WooCommerce
 
 ### Description
 

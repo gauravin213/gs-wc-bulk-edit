@@ -1,7 +1,7 @@
 <?php
 
 /*
-Plugin Name: Gs wc bulk edit
+Plugin Name: GS Bulk Product Editor for WooCommerce
 Description: This is the Gs wc bulk edit Product plugin
 Author: Gaurav 
 Version: 1.0.0

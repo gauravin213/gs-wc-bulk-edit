@@ -1,4 +1,4 @@
-=== GS WC BULK EDIT PRODUCT ===
+=== GS Bulk Product Editor for WooCommerce ===
 Contributors: gauravin213
 Tags: wp-bulk, wp-bulk-edit, light bulk editor
 Requires at least: 4.2
