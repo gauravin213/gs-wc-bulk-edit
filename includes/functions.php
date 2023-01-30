@@ -154,7 +154,7 @@ function gs_wc_bulk_edit_taxonomy_action_select2(){
 	$taxonomy_name = sanitize_text_field( $_GET['taxonomy_name'] );
 	$_search_key = sanitize_text_field( $_GET['q'] );
 	$q_term = "
-	SELECT t1.term_id, t1.name, t1.slug FROM wp_terms as t1 
+	SELECT t1.term_id, t1.name, t1.slug FROM {$wpdb->prefix}terms as t1 
 		LEFT JOIN wp_term_taxonomy as t2 ON t1.term_id = t2.term_id 
 		WHERE t2.taxonomy = '{$taxonomy_name}'
 		AND t1.name LIKE '%{$_search_key}%'
@@ -262,7 +262,7 @@ function gs_wc_bulk_edit_save_chages_action(){
 	$column_label = sanitize_text_field( $_POST['column_label'] );
 	$column_name = sanitize_text_field( $_POST['column_name'] );
 	$column_val = sanitize_text_field( $_POST['column_val'] );
-	$input_val = sanitize_text_field( $_POST['input_val'] );
+	$input_val = (array) $_POST['input_val'];
 	$selectedValues = wc_clean( wp_unslash( $_POST['selectedValues'] ) );
 	$bs_bulk_edit_action_switch = sanitize_text_field( $_POST['bs_bulk_edit_action_switch'] );
 	$bs_bulk_edit_action_switch_variation = sanitize_text_field( $_POST['bs_bulk_edit_action_switch_variation'] );
@@ -668,9 +668,9 @@ function gs_wc_bulk_edit_get_the_terms($post_id, $taxonomy, $output_type = false
 		$select_names = implode(', ', $columns);
 	}
 	$q_term = "
-			SELECT {$select_names} FROM wp_terms WHERE term_id IN(
-				SELECT term_id FROM wp_term_taxonomy WHERE term_taxonomy_id IN(
-					SELECT term_taxonomy_id FROM wp_term_relationships WHERE object_id IN({$post_id})
+			SELECT {$select_names} FROM {$wpdb->prefix}terms WHERE term_id IN(
+				SELECT term_id FROM {$wpdb->prefix}term_taxonomy WHERE term_taxonomy_id IN(
+					SELECT term_taxonomy_id FROM {$wpdb->prefix}term_relationships WHERE object_id IN({$post_id})
 				)
 				AND taxonomy = '{$taxonomy}'
 			)";
@@ -687,7 +687,7 @@ function gs_wc_bulk_edit_get_the_terms($post_id, $taxonomy, $output_type = false
 */
 function gs_wc_bulk_edit_get_variations($parent_id){
 	global $wpdb;
-	$q = "SELECT * FROM `wp_posts` WHERE `post_parent` = {$parent_id}";
+	$q = "SELECT * FROM `{$wpdb->prefix}posts` WHERE `post_parent` = {$parent_id}";
 	$result = $wpdb->get_results($q, ARRAY_A);
 	return $result;
 }
@@ -709,7 +709,7 @@ function gs_wc_bulk_edit_filter_query_result($taxonomy_arr = array(), $metadata_
 	if (!empty($taxonomy_arr)) {
 		$c = 0;
 		foreach ($taxonomy_arr as $key => $value) {
-			$q_taxonomy_join .= " LEFT JOIN wp_term_relationships AS tr{$c} ON (p.ID = tr{$c}.object_id) ";
+			$q_taxonomy_join .= " LEFT JOIN {$wpdb->prefix}term_relationships AS tr{$c} ON (p.ID = tr{$c}.object_id) ";
 			$value = implode(', ', $value);
 			if ($c  == 0) {
 				$q_taxonomy_where .= " tr{$c}.term_taxonomy_id IN ({$value}) ";
@@ -724,7 +724,7 @@ function gs_wc_bulk_edit_filter_query_result($taxonomy_arr = array(), $metadata_
 		$c = 0;
 		foreach ($metadata_arr as $meta_key => $meta_value) {
 			if (!empty($meta_value)) {
-				$q_metadata_join .= " INNER JOIN wp_postmeta AS mt{$c} ON ( p.ID = mt{$c}.post_id ) ";
+				$q_metadata_join .= " INNER JOIN {$wpdb->prefix}postmeta AS mt{$c} ON ( p.ID = mt{$c}.post_id ) ";
 				if ($c == 0) {
 					$q_metadata_where .= "  ( mt{$c}.meta_key = '{$meta_key}' AND mt{$c}.meta_value = '{$meta_value}' ) ";
 				}else{
@@ -746,7 +746,7 @@ function gs_wc_bulk_edit_filter_query_result($taxonomy_arr = array(), $metadata_
 
 	$meta_keys = gs_wc_bulk_edit_get_columns_settings('meta_keys');
 	if (in_array($orderby, $meta_keys)) { 
-		$q_orderby_meta_key_join .= " INNER JOIN wp_postmeta AS mto ON ( p.ID = mto.post_id ) ";
+		$q_orderby_meta_key_join .= " INNER JOIN {$wpdb->prefix}postmeta AS mto ON ( p.ID = mto.post_id ) ";
 		$where_q .= " AND mto.meta_key = '{$orderby}' ";
 		$q_orderby .= " ORDER BY mto.meta_value+0 {$order}  ";
 	}else{
@@ -762,7 +762,7 @@ function gs_wc_bulk_edit_filter_query_result($taxonomy_arr = array(), $metadata_
 	}
 
 	$result_q = "
-		SELECT * FROM wp_posts as p
+		SELECT * FROM {$wpdb->prefix}posts as p
 			{$q_taxonomy_join} 
 			{$q_metadata_join}
 			{$q_orderby_meta_key_join}
@@ -777,7 +777,7 @@ function gs_wc_bulk_edit_filter_query_result($taxonomy_arr = array(), $metadata_
 	$result = $wpdb->get_results($result_q, ARRAY_A);
 
 	$count_with_filter_q = "
-		SELECT count(*) AS allcount FROM wp_posts as p
+		SELECT count(*) AS allcount FROM {$wpdb->prefix}posts as p
 			{$q_taxonomy_join} 
 			{$q_metadata_join}
 			{$q_orderby_meta_key_join}
@@ -792,7 +792,7 @@ function gs_wc_bulk_edit_filter_query_result($taxonomy_arr = array(), $metadata_
 	$count_with_filter = array_column($count_with_filter, 'allcount');
 
 	$total_count_q = "
-		SELECT count(*) AS allcount FROM wp_posts as p
+		SELECT count(*) AS allcount FROM {$wpdb->prefix}posts as p
 			WHERE 1=1   
 				AND p.post_type = 'product'
 				AND p.post_status = 'publish'
