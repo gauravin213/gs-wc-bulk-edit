@@ -27,8 +27,8 @@ function gs_wc_bulk_edit_admin_enqueue_scripts(){
     wp_enqueue_style('cus-switchery-style', GS_WC_BULK_EDIT_URL . 'assets/switchery/switchery.min.css', array(), '1.0', 'all' );
 
     //jquery-toast-plugin
-    wp_enqueue_script( 'cus-jquery-toast-plugin-js',GS_WC_BULK_EDIT_URL . 'assets/jquery-toast-plugin/jquery.toast.min.js', array( 'jquery' ), '1.0', true );
-    wp_enqueue_style('cus-jquery-toast-plugin-style', GS_WC_BULK_EDIT_URL . 'assets/jquery-toast-plugin/jquery.toast.min.css', array(), '1.0', 'all' );
+    //wp_enqueue_script( 'cus-jquery-toast-plugin-js',GS_WC_BULK_EDIT_URL . 'assets/jquery-toast-plugin/jquery.toast.min.js', array( 'jquery' ), '1.0', true );
+    //wp_enqueue_style('cus-jquery-toast-plugin-style', GS_WC_BULK_EDIT_URL . 'assets/jquery-toast-plugin/jquery.toast.min.css', array(), '1.0', 'all' );
 
     //jquery.scrollbar
     wp_enqueue_script( 'cus-jquery-scrollbar-js',GS_WC_BULK_EDIT_URL . 'assets/jquery-scrollbar/jquery.scrollbar.min.js', array( 'jquery' ), '1.0', true );
@@ -145,30 +145,6 @@ function gs_wc_bulk_edit_clear_filter_action(){
     die();
 }
 
-/*
-* Ajax select taxonomy terms
-*/
-function gs_wc_bulk_edit_taxonomy_action_select2(){
-	global $wpdb;
-	$return = array();
-	$taxonomy_name = sanitize_text_field( $_GET['taxonomy_name'] );
-	$_search_key = sanitize_text_field( $_GET['q'] );
-	$q_term = "
-	SELECT t1.term_id, t1.name, t1.slug FROM {$wpdb->prefix}terms as t1 
-		LEFT JOIN wp_term_taxonomy as t2 ON t1.term_id = t2.term_id 
-		WHERE t2.taxonomy = '{$taxonomy_name}'
-		AND t1.name LIKE '%{$_search_key}%'
-		LIMIT 0, 10
-	";
-	$terms = $wpdb->get_results($q_term);
-	if ( count($terms) > 0 ){
-		foreach ( $terms as $term ) {
-			$return[] = array( $term->term_id, $term->name );
-		}
-	}
-	echo json_encode( $return );
-	die;
-}
 
 /*
 * Ajax page load
@@ -262,7 +238,7 @@ function gs_wc_bulk_edit_save_chages_action(){
 	$column_label = sanitize_text_field( $_POST['column_label'] );
 	$column_name = sanitize_text_field( $_POST['column_name'] );
 	$column_val = sanitize_text_field( $_POST['column_val'] );
-	$input_val = (array) $_POST['input_val'];
+	$input_val = $_POST['input_val'];
 	$selectedValues = wc_clean( wp_unslash( $_POST['selectedValues'] ) );
 	$bs_bulk_edit_action_switch = sanitize_text_field( $_POST['bs_bulk_edit_action_switch'] );
 	$bs_bulk_edit_action_switch_variation = sanitize_text_field( $_POST['bs_bulk_edit_action_switch_variation'] );
@@ -347,6 +323,8 @@ function gs_wc_bulk_edit_save_chages_action(){
 		$myJSON = sanitize_text_field( $_POST );
 	}
 
+	//die;
+
 	wp_send_json( $myJSON );
 	wp_die();
 }
@@ -379,6 +357,13 @@ function gs_wc_bulk_edit_get_filter_text_val($type = '', $name = ''){
 * Update values
 */
 function gs_wc_bulk_edit_update_values($post_id, $column_type, $column_name, $input_val, $switch_variation){
+
+	/*echo "post_id: ".$post_id; echo "<br>";
+	echo "column_type: ".$column_type; echo "<br>";
+	echo "column_name: ".$column_name; echo "<br>";
+	echo "input_val: ".$input_val; echo "<br>";
+	echo "switch_variation: ".$switch_variation; echo "<br>";
+	die;*/
 
 	//post_table_attribute
 	if ($column_type == "post_table_attribute") {
@@ -420,10 +405,15 @@ function gs_wc_bulk_edit_update_values($post_id, $column_type, $column_name, $in
 	//"meta_key"
 	if ($column_type == "meta_key") {
 
+		$is_variations = gs_wc_bulk_edit_is_variations($post_id);
+		if (!empty($is_variations)) {
+			$product_type = $is_variations;
+		}else{
+			$product_type = get_the_terms($post_id, 'product_type')[0]->slug;
+		}
 		
-		$product_type = get_the_terms($post_id, 'product_type')[0]->slug;
-
-		if($product_type == 'simple'){
+		
+		if($product_type == 'simple'){ 
 
 			if ($column_name == '_sale_price') {
 
@@ -454,13 +444,13 @@ function gs_wc_bulk_edit_update_values($post_id, $column_type, $column_name, $in
 				update_post_meta($post_id, $column_name, $input_val);
 			}
 
-		}else if($product_type == 'variable'){
+		}else if($product_type == 'variable'){  
 
 			if(!in_array($column_name, ['_regular_price', '_sale_price'])){
 				update_post_meta($post_id, $column_name, $input_val);
-			}
+			} 
 
-			if ($switch_variation == 1) {
+			if ($switch_variation == 1) {  
 				$gs_wc_bulk_edit_get_variations = gs_wc_bulk_edit_get_variations($post_id);
 				if (!empty($gs_wc_bulk_edit_get_variations)) {
 					foreach ($gs_wc_bulk_edit_get_variations as $var_key => $var_row) { 
@@ -500,11 +490,40 @@ function gs_wc_bulk_edit_update_values($post_id, $column_type, $column_name, $in
 			}
 
 
-		}else if($product_type == 'grouped'){
+		}else if($product_type == 'product_variation'){
+
+			$_variations_id = $post_id;
+			if ($column_name == '_sale_price') {
+
+				if ($input_val == 'delete') {
+					$variation = new WC_Product_Variation( $_variations_id );
+			        $variation->set_sale_price("");
+			        $variation->save();
+				}else{
+					$_regular_price = get_post_meta($_variations_id, '_regular_price', true);
+					if (!empty($_regular_price)) {
+						$_dis_sale_price = $_regular_price * $input_val / 100;
+						$_dis_sale_price_c = $_regular_price - $_dis_sale_price;
+						$_dis_sale_price_c = round($_dis_sale_price_c, 2);
+						$variation = new WC_Product_Variation( $_variations_id );
+			            $variation->set_sale_price($_dis_sale_price_c);
+			            $variation->save();
+					}
+				}
+				
+			}else if($column_name == '_regular_price'){
+				$variation = new WC_Product_Variation( $_variations_id );
+			    $variation->set_regular_price($input_val);
+			    $variation->save();
+			}else{
+				update_post_meta($_variations_id, $column_name, $input_val);
+			}
+
+		}else if($product_type == 'grouped'){ 
 			if(!in_array($column_name, ['_regular_price', '_sale_price'])){
 				update_post_meta($post_id, $column_name, $input_val);
 			}
-		}else if($product_type == 'external'){
+		}else if($product_type == 'external'){ 
 			if ($column_name == '_sale_price') {
 
 				if ($input_val == 'delete') {
@@ -658,6 +677,32 @@ function gs_wc_bulk_edit_get_display_output($cc, $row, $product_type = ""){
 	];
 }
 
+
+/*
+* Ajax select taxonomy terms
+*/
+function gs_wc_bulk_edit_taxonomy_action_select2(){
+	global $wpdb;
+	$return = array();
+	$taxonomy_name = sanitize_text_field( $_GET['taxonomy_name'] );
+	$_search_key = sanitize_text_field( $_GET['q'] );
+	$q_term = "
+	SELECT t1.term_id, t1.name, t1.slug FROM {$wpdb->prefix}terms as t1 
+		LEFT JOIN wp_term_taxonomy as t2 ON t1.term_id = t2.term_id 
+		WHERE t2.taxonomy = '{$taxonomy_name}'
+		AND t1.name LIKE '%{$_search_key}%'
+		LIMIT 0, 10
+	";
+	$terms = $wpdb->get_results($q_term);
+	if ( count($terms) > 0 ){
+		foreach ( $terms as $term ) {
+			$return[] = array( $term->term_id, $term->name );
+		}
+	}
+	echo json_encode( $return );
+	die;
+}
+
 /*
 * Get the terms
 */
@@ -690,6 +735,20 @@ function gs_wc_bulk_edit_get_variations($parent_id){
 	$q = "SELECT * FROM `{$wpdb->prefix}posts` WHERE `post_parent` = {$parent_id}";
 	$result = $wpdb->get_results($q, ARRAY_A);
 	return $result;
+}
+
+/*
+* Get parent_id
+*/
+function gs_wc_bulk_edit_is_variations($variations_id){
+	global $wpdb;
+	$q = "SELECT post_type FROM {$wpdb->prefix}posts WHERE post_type = 'product_variation' AND ID = {$variations_id}";
+	$result = $wpdb->get_results($q, ARRAY_A);
+	$post_type = '';
+	if (!empty($result)) {
+		$post_type = 'product_variation';
+	}
+	return $post_type;
 }
 
 /*
